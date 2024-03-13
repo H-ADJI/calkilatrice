@@ -51,14 +51,14 @@ func (token Token) String() string {
 type Lexer struct {
 	expr   []byte
 	cursor int
-	Tokens []Token
+	tokens []Token
 }
 
 func NewLexer(mathExpression string) Lexer {
 	return Lexer{expr: []byte(mathExpression)}
 }
 
-func (lexer *Lexer) Tokenize() {
+func (lexer *Lexer) tokenize() {
 	if lexer.cursor == len(lexer.expr) {
 		return
 	}
@@ -69,20 +69,17 @@ func (lexer *Lexer) Tokenize() {
 			lexer.cursor += len(token)
 			// White spaces are ignored, no token is added to our token list
 			if rule.tokenType == whiteSpace {
-				lexer.Tokenize()
+				lexer.tokenize()
 			} else {
-				lexer.Tokens = append(lexer.Tokens, Token{value: string(token), tokenType: rule.tokenType})
-				lexer.Tokenize()
+				lexer.tokens = append(lexer.tokens, Token{value: string(token), tokenType: rule.tokenType})
+				lexer.tokenize()
 			}
 		}
 	}
 
 }
 
-// func (lexer Lexer) String() string {
-// 	builder := strings.Builder{}
-// 	for _,t := lexer.tokens {
-// 		builder.WriteString(t)
-// 	}
-// 	return fmt.Sprintf("[%v : %v]", token.tokenType, token.value)
-// }
+func (lexer *Lexer) Tokens() []Token {
+	lexer.tokenize()
+	return lexer.tokens
+}

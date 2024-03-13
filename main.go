@@ -9,7 +9,6 @@ import (
 func main() {
 	input := "sin(cos(90))*5*11-(5-9)"
 	lexer := lexer.NewLexer(input)
-	lexer.Tokenize()
-	fmt.Println(lexer.Tokens)
+	fmt.Println(lexer.Tokens())
 
 }

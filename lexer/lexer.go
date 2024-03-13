@@ -26,17 +26,17 @@ type Rule struct {
 }
 type Grammar []Rule
 
-var calculatorGrammar = []Grammar{
-	{Rule{pattern: regexp.MustCompile(`^\d+`), tokenType: number}},
-	{Rule{pattern: regexp.MustCompile(`^[a-zA-Z]+`), tokenType: mathFunc}},
-	{Rule{pattern: regexp.MustCompile(`^\s+`), tokenType: whiteSpace}},
-	{Rule{pattern: regexp.MustCompile(`^\+`), tokenType: addOp}},
-	{Rule{pattern: regexp.MustCompile(`^\-`), tokenType: minusOp}},
-	{Rule{pattern: regexp.MustCompile(`^\*`), tokenType: multOp}},
-	{Rule{pattern: regexp.MustCompile(`^/`), tokenType: divOp}},
-	{Rule{pattern: regexp.MustCompile(`^\^`), tokenType: expOp}},
-	{Rule{pattern: regexp.MustCompile(`^\(`), tokenType: rightPar}},
-	{Rule{pattern: regexp.MustCompile(`^\)`), tokenType: leftPar}},
+var calculatorGrammar = Grammar{
+	Rule{pattern: regexp.MustCompile(`^\d+`), tokenType: number},
+	Rule{pattern: regexp.MustCompile(`^\+`), tokenType: addOp},
+	Rule{pattern: regexp.MustCompile(`^\s+`), tokenType: whiteSpace},
+	Rule{pattern: regexp.MustCompile(`^[a-zA-Z]+`), tokenType: mathFunc},
+	Rule{pattern: regexp.MustCompile(`^\-`), tokenType: minusOp},
+	Rule{pattern: regexp.MustCompile(`^\*`), tokenType: multOp},
+	Rule{pattern: regexp.MustCompile(`^/`), tokenType: divOp},
+	Rule{pattern: regexp.MustCompile(`^\^`), tokenType: expOp},
+	Rule{pattern: regexp.MustCompile(`^\(`), tokenType: rightPar},
+	Rule{pattern: regexp.MustCompile(`^\)`), tokenType: leftPar},
 }
 
 type Token struct {
@@ -45,17 +45,38 @@ type Token struct {
 }
 
 func (token Token) String() string {
-	return fmt.Sprintf("[%v : %v]", token.tokenType, token.value)
+	return fmt.Sprintf("[type : %v : value : %v]", token.tokenType, token.value)
 }
 
 type Lexer struct {
-	expr   string
+	expr   []byte
 	cursor int
-	tokens []Token
+	Tokens []Token
 }
 
 func NewLexer(mathExpression string) Lexer {
-	return Lexer{expr: mathExpression}
+	return Lexer{expr: []byte(mathExpression)}
+}
+
+func (lexer *Lexer) Tokenize() {
+	if lexer.cursor == len(lexer.expr) {
+		return
+	}
+	for _, rule := range calculatorGrammar {
+		currentExpr := lexer.expr[lexer.cursor:]
+		token := rule.pattern.Find(currentExpr)
+		if token != nil {
+			lexer.cursor += len(token)
+			// White spaces are ignored, no token is added to our token list
+			if rule.tokenType == whiteSpace {
+				lexer.Tokenize()
+			} else {
+				lexer.Tokens = append(lexer.Tokens, Token{value: string(token), tokenType: rule.tokenType})
+				lexer.Tokenize()
+			}
+		}
+	}
+
 }
 
 // func (lexer Lexer) String() string {

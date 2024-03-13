@@ -2,19 +2,14 @@ package main
 
 import (
 	"fmt"
-	"strings"
-	"text/scanner"
+
+	"github.com/H-ADJI/calkilatrice/lexer"
 )
 
 func main() {
-	var s scanner.Scanner
-	input := "5 + 10"
-	s.Init(strings.NewReader(input))
-	for {
-		tok := s.Scan()
-		if tok == scanner.EOF {
-			break
-		}
-		fmt.Printf("Token: %s,\n", s.TokenText())
-	}
+	input := "sin(cos(90))*5*11-(5-9)"
+	lexer := lexer.NewLexer(input)
+	lexer.Tokenize()
+	fmt.Println(lexer.Tokens)
+
 }

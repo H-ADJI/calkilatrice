@@ -80,6 +80,8 @@ func (lexer *Lexer) tokenize() {
 }
 
 func (lexer *Lexer) Tokens() []Token {
-	lexer.tokenize()
+	if lexer.tokens == nil {
+		lexer.tokenize()
+	}
 	return lexer.tokens
 }

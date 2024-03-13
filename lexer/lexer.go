@@ -3,6 +3,7 @@ package lexer
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 const DELIM = "--"
@@ -27,7 +28,7 @@ type Rule struct {
 type Grammar []Rule
 
 var calculatorGrammar = Grammar{
-	Rule{pattern: regexp.MustCompile(`^\d+`), tokenType: number},
+	Rule{pattern: regexp.MustCompile(`^-?\d+(?:\.\d+)?`), tokenType: number},
 	Rule{pattern: regexp.MustCompile(`^\+`), tokenType: addOp},
 	Rule{pattern: regexp.MustCompile(`^\s+`), tokenType: whiteSpace},
 	Rule{pattern: regexp.MustCompile(`^[a-zA-Z]+`), tokenType: mathFunc},
@@ -45,7 +46,7 @@ type Token struct {
 }
 
 func (token Token) String() string {
-	return fmt.Sprintf("[type : %v : value : %v]", token.tokenType, token.value)
+	return fmt.Sprintf("Token[%v]", token.value)
 }
 
 type Lexer struct {
@@ -59,6 +60,8 @@ func NewLexer(mathExpression string) Lexer {
 }
 
 func (lexer *Lexer) tokenize() {
+	fmt.Println(lexer.cursor)
+	fmt.Println(len(lexer.expr))
 	if lexer.cursor == len(lexer.expr) {
 		return
 	}
@@ -70,13 +73,19 @@ func (lexer *Lexer) tokenize() {
 			// White spaces are ignored, no token is added to our token list
 			if rule.tokenType == whiteSpace {
 				lexer.tokenize()
+				return
 			} else {
 				lexer.tokens = append(lexer.tokens, Token{value: string(token), tokenType: rule.tokenType})
 				lexer.tokenize()
+				return
 			}
 		}
 	}
 
+	errMsg := fmt.Sprintf("unkown token at position %d in: %v", lexer.cursor+1, string(lexer.expr))
+	errCursor := strings.Repeat(" ", len(errMsg)-len(lexer.expr)+lexer.cursor)
+	fmt.Printf("%v\n%v^\n", errMsg, errCursor)
+	lexer.tokens = nil
 }
 
 func (lexer *Lexer) Tokens() []Token {

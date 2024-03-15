@@ -64,8 +64,6 @@ func NewLexer(mathExpression string) Lexer {
 }
 
 func (lexer *Lexer) tokenize() {
-	fmt.Println(lexer.cursor)
-	fmt.Println(len(lexer.expr))
 	if lexer.cursor == len(lexer.expr) {
 		return
 	}

@@ -3,22 +3,23 @@ package lexer
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 )
 
 const DELIM = "--"
 
 const (
-	whiteSpace = iota
-	addOp
-	minusOp
-	multOp
-	expOp
-	divOp
-	number
-	rightPar
-	leftPar
-	mathFunc
+	WhiteSpace = iota
+	AddOp
+	MinusOp
+	MultOp
+	ExpOp
+	DivOp
+	Number
+	RightPar
+	LeftPar
+	MathFunc
 )
 
 type Rule struct {
@@ -28,25 +29,28 @@ type Rule struct {
 type Grammar []Rule
 
 var calculatorGrammar = Grammar{
-	Rule{pattern: regexp.MustCompile(`^-?\d+(?:\.\d+)?`), tokenType: number},
-	Rule{pattern: regexp.MustCompile(`^\+`), tokenType: addOp},
-	Rule{pattern: regexp.MustCompile(`^\s+`), tokenType: whiteSpace},
-	Rule{pattern: regexp.MustCompile(`^[a-zA-Z]+`), tokenType: mathFunc},
-	Rule{pattern: regexp.MustCompile(`^\-`), tokenType: minusOp},
-	Rule{pattern: regexp.MustCompile(`^\*`), tokenType: multOp},
-	Rule{pattern: regexp.MustCompile(`^/`), tokenType: divOp},
-	Rule{pattern: regexp.MustCompile(`^\^`), tokenType: expOp},
-	Rule{pattern: regexp.MustCompile(`^\(`), tokenType: rightPar},
-	Rule{pattern: regexp.MustCompile(`^\)`), tokenType: leftPar},
+	Rule{pattern: regexp.MustCompile(`^-?\d+(?:\.\d+)?`), tokenType: Number},
+	Rule{pattern: regexp.MustCompile(`^\+`), tokenType: AddOp},
+	Rule{pattern: regexp.MustCompile(`^\s+`), tokenType: WhiteSpace},
+	Rule{pattern: regexp.MustCompile(`^[a-zA-Z]+`), tokenType: MathFunc},
+	Rule{pattern: regexp.MustCompile(`^\-`), tokenType: MinusOp},
+	Rule{pattern: regexp.MustCompile(`^\*`), tokenType: MultOp},
+	Rule{pattern: regexp.MustCompile(`^/`), tokenType: DivOp},
+	Rule{pattern: regexp.MustCompile(`^\^`), tokenType: ExpOp},
+	Rule{pattern: regexp.MustCompile(`^\(`), tokenType: RightPar},
+	Rule{pattern: regexp.MustCompile(`^\)`), tokenType: LeftPar},
 }
 
 type Token struct {
-	value     string
-	tokenType int
+	Value     string
+	TokenType int
 }
 
 func (token Token) String() string {
-	return fmt.Sprintf("Token[%v]", token.value)
+	return fmt.Sprintf("Token[%v]", token.Value)
+}
+func (token Token) IsType(types ...int) bool {
+	return slices.Contains(types, token.TokenType)
 }
 
 type Lexer struct {
@@ -71,11 +75,11 @@ func (lexer *Lexer) tokenize() {
 		if token != nil {
 			lexer.cursor += len(token)
 			// White spaces are ignored, no token is added to our token list
-			if rule.tokenType == whiteSpace {
+			if rule.tokenType == WhiteSpace {
 				lexer.tokenize()
 				return
 			} else {
-				lexer.tokens = append(lexer.tokens, Token{value: string(token), tokenType: rule.tokenType})
+				lexer.tokens = append(lexer.tokens, Token{Value: string(token), TokenType: rule.tokenType})
 				lexer.tokenize()
 				return
 			}

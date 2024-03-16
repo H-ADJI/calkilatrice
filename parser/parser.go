@@ -109,8 +109,8 @@ func (parser *Paser) terminals() *astNode {
 		return exp
 
 	}
-	if parser.lookahead.IsType(lexer.Number) {
-		return &astNode{token: parser.Consume(lexer.Number)}
+	if parser.lookahead.IsType(lexer.Number, lexer.NegativeNumber) {
+		return &astNode{token: parser.Consume(parser.lookahead.TokenType)}
 	}
 	panic("Unkown Terminal")
 }

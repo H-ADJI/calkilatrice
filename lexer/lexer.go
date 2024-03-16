@@ -17,6 +17,7 @@ const (
 	ExpOp
 	DivOp
 	Number
+	NegativeNumber
 	RightPar
 	LeftPar
 	MathFunc
@@ -29,11 +30,12 @@ type Rule struct {
 type Grammar []Rule
 
 var calculatorGrammar = Grammar{
-	Rule{pattern: regexp.MustCompile(`^-?\d+(?:\.\d+)?`), tokenType: Number},
+	Rule{pattern: regexp.MustCompile(`^\d+(?:\.\d+)?`), tokenType: Number},
+	Rule{pattern: regexp.MustCompile(`^-\d+(?:\.\d+)?`), tokenType: NegativeNumber},
+	Rule{pattern: regexp.MustCompile(`^\-`), tokenType: MinusOp},
 	Rule{pattern: regexp.MustCompile(`^\+`), tokenType: AddOp},
 	Rule{pattern: regexp.MustCompile(`^\s+`), tokenType: WhiteSpace},
 	Rule{pattern: regexp.MustCompile(`^[a-zA-Z]+`), tokenType: MathFunc},
-	Rule{pattern: regexp.MustCompile(`^\-`), tokenType: MinusOp},
 	Rule{pattern: regexp.MustCompile(`^\*`), tokenType: MultOp},
 	Rule{pattern: regexp.MustCompile(`^/`), tokenType: DivOp},
 	Rule{pattern: regexp.MustCompile(`^\^`), tokenType: ExpOp},
@@ -69,15 +71,23 @@ func (lexer *Lexer) tokenize() {
 	}
 	for _, rule := range calculatorGrammar {
 		currentExpr := lexer.expr[lexer.cursor:]
-		token := rule.pattern.Find(currentExpr)
-		if token != nil {
-			lexer.cursor += len(token)
+		match := rule.pattern.Find(currentExpr)
+		if match != nil {
+			lexer.cursor += len(match)
 			// White spaces are ignored, no token is added to our token list
 			if rule.tokenType == WhiteSpace {
 				lexer.tokenize()
 				return
+			} else if rule.tokenType == NegativeNumber {
+				// when we have
+				if len(lexer.tokens) != 0 {
+					lexer.tokens = append(lexer.tokens, Token{Value: "+", TokenType: AddOp})
+				}
+				lexer.tokens = append(lexer.tokens, Token{Value: string(match), TokenType: rule.tokenType})
+				lexer.tokenize()
+				return
 			} else {
-				lexer.tokens = append(lexer.tokens, Token{Value: string(token), TokenType: rule.tokenType})
+				lexer.tokens = append(lexer.tokens, Token{Value: string(match), TokenType: rule.tokenType})
 				lexer.tokenize()
 				return
 			}

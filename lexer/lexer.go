@@ -49,7 +49,7 @@ type Token struct {
 }
 
 func (token Token) String() string {
-	return fmt.Sprintf("Token[%v]", token.Value)
+	return fmt.Sprintf("[%v]", token.Value)
 }
 func (token Token) IsType(types ...int) bool {
 	return slices.Contains(types, token.TokenType)
@@ -94,7 +94,7 @@ func (lexer *Lexer) tokenize() {
 		}
 	}
 
-	errMsg := fmt.Sprintf("unkown token at position %d in: %v", lexer.cursor+1, string(lexer.expr))
+	errMsg := fmt.Sprintf("Invalid Syntax : unkown token at position %d ==> %v", lexer.cursor+1, string(lexer.expr))
 	errCursor := strings.Repeat(" ", len(errMsg)-len(lexer.expr)+lexer.cursor)
 	fmt.Printf("%v\n%v^\n", errMsg, errCursor)
 	lexer.tokens = nil

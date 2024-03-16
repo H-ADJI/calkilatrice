@@ -8,9 +8,9 @@ import (
 )
 
 func main() {
-	input := "53333+2 222-2 2222"
+	input := "22-2^3"
 	lexer := lexer.NewLexer(input)
-	fmt.Println(lexer.Tokens())
+	lexer.Tokens()
 	parser := parser.Paser{}
 	ast := parser.AST(input)
 	fmt.Println(ast)

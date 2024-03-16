@@ -86,7 +86,7 @@ func (parser *Paser) AST(mathExpression string) *AST {
 	return &AST{}
 }
 
-func (parser *Paser) currentPos() int {
+func (parser *Paser) characterPosition() int {
 	var sum int
 	if parser.cursor == 1 || parser.cursor == len(parser.tokens)-1 {
 		sum = -1
@@ -100,8 +100,8 @@ func (parser *Paser) currentPos() int {
 func (parser *Paser) expression() *astNode {
 	root := parser.addition()
 	if parser.cursor < len(parser.tokens) {
-		errMsg := fmt.Sprintf("Invalid syntax at position %d in: %v", parser.cursor+1, string(parser.mathExpression))
-		errCursor := strings.Repeat(" ", len(errMsg)-len(parser.mathExpression)+parser.currentPos())
+		errMsg := fmt.Sprintf("Invalid syntax : at position %d ==> %v", parser.characterPosition()+1, string(parser.mathExpression))
+		errCursor := strings.Repeat(" ", len(errMsg)-len(parser.mathExpression)+parser.characterPosition())
 		fmt.Printf("%v\n%v^\n", errMsg, errCursor)
 	}
 	return root
@@ -117,20 +117,20 @@ func (parser *Paser) addition() *astNode {
 }
 
 func (parser *Paser) multiplication() *astNode {
-	leftNode := parser.terminals()
+	leftNode := parser.exponentiation()
 	for parser.lookahead.IsType(lexer.MultOp, lexer.DivOp) {
-		leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.terminals()}
+		leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.exponentiation()}
 	}
 	return leftNode
 }
 
-//	func (parser *Paser) exponentiation() *astNode {
-//		leftNode := parser.terminals()
-//		for parser.lookahead.IsType(lexer.MultOp, lexer.DivOp) {
-//			leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.terminals()}
-//		}
-//		return leftNode
-//	}
+func (parser *Paser) exponentiation() *astNode {
+	leftNode := parser.terminals()
+	for parser.lookahead.IsType(lexer.ExpOp) {
+		leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.terminals()}
+	}
+	return leftNode
+}
 func (parser *Paser) terminals() *astNode {
 	if parser.lookahead.IsType(lexer.LeftPar) {
 		parser.Consume(lexer.LeftPar)

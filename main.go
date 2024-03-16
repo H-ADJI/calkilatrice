@@ -8,9 +8,9 @@ import (
 )
 
 func main() {
-	input := "22-2^3"
+	input := "1+sin(tan(22*5-1))"
 	lexer := lexer.NewLexer(input)
-	lexer.Tokens()
+	fmt.Println(lexer.Tokens())
 	parser := parser.Paser{}
 	ast := parser.AST(input)
 	fmt.Println(ast)

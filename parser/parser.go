@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/H-ADJI/calkilatrice/lexer"
@@ -86,36 +85,40 @@ func (parser *Paser) AST(mathExpression string) *AST {
 	return &AST{}
 }
 
-func (parser *Paser) characterPosition() int {
-	var sum int
-	if parser.cursor == 1 || parser.cursor == len(parser.tokens)-1 {
-		sum = -1
-	}
-	for _, token := range parser.tokens[:parser.cursor] {
-		sum += len(token.Value)
-	}
-	return sum
-}
+// func (parser *Paser) characterPosition() int {
+// 	var sum int
+// 	if parser.cursor == len(parser.tokens)-1 {
+// 		sum = -1
+// 	}
+// 	for _, token := range parser.tokens[:parser.cursor] {
+// 		sum += len(token.Value)
+// 	}
+// 	return sum
+// }
 
 func (parser *Paser) expression() *astNode {
 	root := parser.addition()
-	if parser.cursor < len(parser.tokens) {
-		errMsg := fmt.Sprintf("Invalid syntax : at position %d ==> %v", parser.characterPosition()+1, string(parser.mathExpression))
-		errCursor := strings.Repeat(" ", len(errMsg)-len(parser.mathExpression)+parser.characterPosition())
-		fmt.Printf("%v\n%v^\n", errMsg, errCursor)
-	}
 	return root
 }
 
 func (parser *Paser) addition() *astNode {
-	leftNode := parser.multiplication()
+	leftNode := parser.mathFunc()
 	for parser.lookahead.IsType(lexer.AddOp, lexer.MinusOp) {
-		leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.multiplication()}
+		leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.mathFunc()}
 	}
 	return leftNode
 
 }
-
+func (parser *Paser) mathFunc() *astNode {
+	leftNode := parser.multiplication()
+	if parser.lookahead.IsType(lexer.LeftPar) {
+		parser.Consume(parser.lookahead.TokenType)
+		arg := parser.expression()
+		parser.Consume(lexer.RightPar)
+		return &astNode{token: leftNode.token, left: arg}
+	}
+	return leftNode
+}
 func (parser *Paser) multiplication() *astNode {
 	leftNode := parser.exponentiation()
 	for parser.lookahead.IsType(lexer.MultOp, lexer.DivOp) {
@@ -137,9 +140,11 @@ func (parser *Paser) terminals() *astNode {
 		exp := parser.expression()
 		parser.Consume(lexer.RightPar)
 		return exp
-
 	}
 	if parser.lookahead.IsType(lexer.Number, lexer.NegativeNumber) {
+		return &astNode{token: parser.Consume(parser.lookahead.TokenType)}
+	}
+	if parser.lookahead.IsType(lexer.MathFunc) {
 		return &astNode{token: parser.Consume(parser.lookahead.TokenType)}
 	}
 	panic("Unkown Terminal")

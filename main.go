@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	input := "5+2-13+2"
+	input := "53333+2 222-2 2222"
 	lexer := lexer.NewLexer(input)
 	fmt.Println(lexer.Tokens())
 	parser := parser.Paser{}

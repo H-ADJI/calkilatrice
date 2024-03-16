@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/H-ADJI/calkilatrice/lexer"
@@ -84,8 +85,26 @@ func (parser *Paser) AST(mathExpression string) *AST {
 	}
 	return &AST{}
 }
+
+func (parser *Paser) currentPos() int {
+	var sum int
+	if parser.cursor == 1 || parser.cursor == len(parser.tokens)-1 {
+		sum = -1
+	}
+	for _, token := range parser.tokens[:parser.cursor] {
+		sum += len(token.Value)
+	}
+	return sum
+}
+
 func (parser *Paser) expression() *astNode {
-	return parser.addition()
+	root := parser.addition()
+	if parser.cursor < len(parser.tokens) {
+		errMsg := fmt.Sprintf("Invalid syntax at position %d in: %v", parser.cursor+1, string(parser.mathExpression))
+		errCursor := strings.Repeat(" ", len(errMsg)-len(parser.mathExpression)+parser.currentPos())
+		fmt.Printf("%v\n%v^\n", errMsg, errCursor)
+	}
+	return root
 }
 
 func (parser *Paser) addition() *astNode {
@@ -105,6 +124,13 @@ func (parser *Paser) multiplication() *astNode {
 	return leftNode
 }
 
+//	func (parser *Paser) exponentiation() *astNode {
+//		leftNode := parser.terminals()
+//		for parser.lookahead.IsType(lexer.MultOp, lexer.DivOp) {
+//			leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.terminals()}
+//		}
+//		return leftNode
+//	}
 func (parser *Paser) terminals() *astNode {
 	if parser.lookahead.IsType(lexer.LeftPar) {
 		parser.Consume(lexer.LeftPar)

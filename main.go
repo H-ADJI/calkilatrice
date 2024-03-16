@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 
-	"github.com/H-ADJI/calkilatrice/lexer"
+	"github.com/H-ADJI/calkilatrice/parser"
 )
 
 func main() {
-	input := "5*@sin(3)"
-	lexer := lexer.NewLexer(input)
-	fmt.Println(lexer.Tokens())
+	input := "5+2"
+	parser := parser.NewParser(input)
+	ast := parser.AST()
+	fmt.Println(ast)
 
 }

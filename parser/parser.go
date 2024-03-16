@@ -23,25 +23,28 @@ type Paser struct {
 
 func NewParser(mathExpression string) Paser {
 	tokenizer := lexer.NewLexer(mathExpression)
-	return Paser{mathExpression: mathExpression, tokens: tokenizer.Tokens()}
+	tokens := tokenizer.Tokens()
+	return Paser{mathExpression: mathExpression, tokens: tokens, lookahead: tokens[0]}
 }
 func (parser *Paser) Next() {
 	parser.cursor += 1
+	if parser.cursor >= len(parser.tokens) {
+		return
+	}
 	parser.lookahead = parser.tokens[parser.cursor]
 }
 
 func (parser *Paser) Consume(tokenType int) lexer.Token {
-	if parser.cursor == len(parser.tokens) {
-		panic("No more tokens available ")
-	}
 	if parser.lookahead.TokenType != tokenType {
 		panic("Wrong token type")
-
 	}
 	defer parser.Next()
 	return parser.lookahead
 }
-func (parser *Paser) Expression() *astNode {
+func (parser *Paser) AST() AST {
+	return AST{root: *parser.expression()}
+}
+func (parser *Paser) expression() *astNode {
 	return parser.addition()
 }
 
@@ -56,7 +59,7 @@ func (parser *Paser) addition() *astNode {
 func (parser *Paser) terminals() *astNode {
 	if parser.lookahead.IsType(lexer.LeftPar) {
 		parser.Consume(lexer.LeftPar)
-		exp := parser.Expression()
+		exp := parser.expression()
 		parser.Consume(lexer.RightPar)
 		return exp
 

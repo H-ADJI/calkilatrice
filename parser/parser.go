@@ -1,6 +1,9 @@
 package parser
 
 import (
+	"errors"
+	"math"
+	"strconv"
 	"strings"
 
 	"github.com/H-ADJI/calkilatrice/lexer"
@@ -13,7 +16,7 @@ type astNode struct {
 }
 
 type AST struct {
-	root astNode
+	Root astNode
 }
 
 func (node *astNode) String() string {
@@ -47,7 +50,7 @@ func (node *astNode) stringWithIndent(indent string, isTail bool) string {
 }
 
 func (tree *AST) String() string {
-	return tree.root.String()
+	return tree.Root.String()
 }
 
 type Paser struct {
@@ -80,7 +83,7 @@ func (parser *Paser) AST(mathExpression string) *AST {
 	if len(tokens) > 0 {
 		parser.lookahead = tokens[0]
 		parser.cursor = 0
-		return &AST{root: *parser.expression()}
+		return &AST{Root: *parser.expression()}
 	}
 	return &AST{}
 }
@@ -148,4 +151,55 @@ func (parser *Paser) terminals() *astNode {
 		return &astNode{token: parser.Consume(parser.lookahead.TokenType)}
 	}
 	panic("Unkown Terminal")
+}
+
+func TreeWalk(root *astNode) float64 {
+	var result float64
+	if root.token.TokenType == lexer.AddOp {
+		result = result + TreeWalk(root.left) + TreeWalk(root.right)
+		return result
+	} else if root.token.TokenType == lexer.MinusOp {
+		result = result + TreeWalk(root.left) - TreeWalk(root.right)
+		return result
+	} else if root.token.TokenType == lexer.MultOp {
+		result = result + TreeWalk(root.left)*TreeWalk(root.right)
+		return result
+	} else if root.token.TokenType == lexer.DivOp {
+		result = result + TreeWalk(root.left)/TreeWalk(root.right)
+		return result
+	} else if root.token.TokenType == lexer.ExpOp {
+		result = result + math.Pow(TreeWalk(root.left), TreeWalk(root.right))
+		return result
+	} else if root.token.TokenType == lexer.MathFunc {
+		mathFunc, err := mathFuncEval(root.token.Value)
+		if err != nil {
+			panic(err)
+		}
+		return mathFunc(TreeWalk(root.left))
+	} else if root.token.IsType(lexer.Number, lexer.NegativeNumber) {
+		value, _ := strconv.ParseFloat(root.token.Value, 64)
+		return value
+	}
+	return result
+}
+
+func mathFuncEval(funcName string) (func(float64) float64, error) {
+	switch funcName {
+	case "sin":
+		return math.Sin, nil
+	case "asin":
+		return math.Asin, nil
+	case "tan":
+		return math.Tan, nil
+	case "atan":
+		return math.Atan, nil
+	case "cos":
+		return math.Atan, nil
+	case "acos":
+		return math.Acos, nil
+	case "sqrt":
+		return math.Sqrt, nil
+	default:
+		return nil, errors.New("Unsupported function " + funcName)
+	}
 }

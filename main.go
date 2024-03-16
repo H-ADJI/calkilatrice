@@ -8,11 +8,13 @@ import (
 )
 
 func main() {
-	input := "1+sin(tan(22*5-1))"
+	input := "sin(90)+ (120)"
 	lexer := lexer.NewLexer(input)
 	fmt.Println(lexer.Tokens())
-	parser := parser.Paser{}
-	ast := parser.AST(input)
+	p := parser.Paser{}
+	ast := p.AST(input)
+	value := parser.TreeWalk(&ast.Root)
 	fmt.Println(ast)
+	fmt.Println(value)
 
 }

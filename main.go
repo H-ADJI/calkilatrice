@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	input := "5+2"
+	input := "5+2-13"
 	parser := parser.NewParser(input)
 	ast := parser.AST()
 	fmt.Println(ast)

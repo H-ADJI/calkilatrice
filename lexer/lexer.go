@@ -39,8 +39,8 @@ var calculatorGrammar = Grammar{
 	Rule{pattern: regexp.MustCompile(`^\*`), tokenType: MultOp},
 	Rule{pattern: regexp.MustCompile(`^/`), tokenType: DivOp},
 	Rule{pattern: regexp.MustCompile(`^\^`), tokenType: ExpOp},
-	Rule{pattern: regexp.MustCompile(`^\(`), tokenType: RightPar},
-	Rule{pattern: regexp.MustCompile(`^\)`), tokenType: LeftPar},
+	Rule{pattern: regexp.MustCompile(`^\(`), tokenType: LeftPar},
+	Rule{pattern: regexp.MustCompile(`^\)`), tokenType: RightPar},
 }
 
 type Token struct {

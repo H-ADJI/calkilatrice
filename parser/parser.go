@@ -57,11 +57,6 @@ type Paser struct {
 	lookahead      lexer.Token
 }
 
-func NewParser(mathExpression string) Paser {
-	tokenizer := lexer.NewLexer(mathExpression)
-	tokens := tokenizer.Tokens()
-	return Paser{mathExpression: mathExpression, tokens: tokens, lookahead: tokens[0]}
-}
 func (parser *Paser) Next() {
 	parser.cursor += 1
 	if parser.cursor >= len(parser.tokens) {
@@ -77,8 +72,17 @@ func (parser *Paser) Consume(tokenType int) lexer.Token {
 	defer parser.Next()
 	return parser.lookahead
 }
-func (parser *Paser) AST() *AST {
-	return &AST{root: *parser.expression()}
+func (parser *Paser) AST(mathExpression string) *AST {
+	tokenizer := lexer.NewLexer(mathExpression)
+	tokens := tokenizer.Tokens()
+	parser.tokens = tokens
+	parser.mathExpression = mathExpression
+	if len(tokens) > 0 {
+		parser.lookahead = tokens[0]
+		parser.cursor = 0
+		return &AST{root: *parser.expression()}
+	}
+	return &AST{}
 }
 func (parser *Paser) expression() *astNode {
 	return parser.addition()

@@ -49,7 +49,7 @@ type Token struct {
 }
 
 func (token Token) String() string {
-	return fmt.Sprintf("[%v]", token.Value)
+	return fmt.Sprintf("[ %v ] ", token.Value)
 }
 func (token Token) IsType(types ...int) bool {
 	return slices.Contains(types, token.TokenType)
@@ -81,7 +81,6 @@ func (lexer *Lexer) tokenize() {
 			} else if rule.tokenType == NegativeNumber {
 				// when we have
 				if len(lexer.tokens) != 0 {
-					lexer.tokens = append(lexer.tokens, Token{Value: "0", TokenType: Number})
 					lexer.tokens = append(lexer.tokens, Token{Value: "+", TokenType: AddOp})
 				}
 				lexer.tokens = append(lexer.tokens, Token{Value: string(match), TokenType: rule.tokenType})

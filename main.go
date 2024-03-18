@@ -15,12 +15,15 @@ func main() {
 	flag.Parse()
 	lexer := parser.NewLexer(*mathExpr)
 	if *showTokens {
-		fmt.Println(lexer.Tokens())
+		fmt.Printf("Tokens : %v \n\n", lexer.Tokens())
 	}
 	p := parser.Paser{}
 	ast := p.AST(*mathExpr)
 	if *showAst {
+		fmt.Println("The Abstract Syntax Tree")
 		fmt.Println(ast)
+		fmt.Println()
+
 	}
 	value := parser.TreeWalk(&ast.Root, *radianToDegree)
 	fmt.Println(value)

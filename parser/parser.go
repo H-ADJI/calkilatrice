@@ -5,12 +5,10 @@ import (
 	"math"
 	"strconv"
 	"strings"
-
-	"github.com/H-ADJI/calkilatrice/lexer"
 )
 
 type astNode struct {
-	token lexer.Token
+	token Token
 	left  *astNode
 	right *astNode
 }
@@ -55,9 +53,9 @@ func (tree *AST) String() string {
 
 type Paser struct {
 	mathExpression string
-	tokens         []lexer.Token
+	tokens         []Token
 	cursor         int
-	lookahead      lexer.Token
+	lookahead      Token
 }
 
 func (parser *Paser) Next() {
@@ -68,7 +66,7 @@ func (parser *Paser) Next() {
 	parser.lookahead = parser.tokens[parser.cursor]
 }
 
-func (parser *Paser) Consume(tokenType int) lexer.Token {
+func (parser *Paser) Consume(tokenType int) Token {
 	if parser.lookahead.TokenType != tokenType {
 		panic("Wrong token type")
 	}
@@ -76,7 +74,7 @@ func (parser *Paser) Consume(tokenType int) lexer.Token {
 	return parser.lookahead
 }
 func (parser *Paser) AST(mathExpression string) *AST {
-	tokenizer := lexer.NewLexer(mathExpression)
+	tokenizer := NewLexer(mathExpression)
 	tokens := tokenizer.Tokens()
 	parser.tokens = tokens
 	parser.mathExpression = mathExpression
@@ -88,17 +86,6 @@ func (parser *Paser) AST(mathExpression string) *AST {
 	return &AST{}
 }
 
-// func (parser *Paser) characterPosition() int {
-// 	var sum int
-// 	if parser.cursor == len(parser.tokens)-1 {
-// 		sum = -1
-// 	}
-// 	for _, token := range parser.tokens[:parser.cursor] {
-// 		sum += len(token.Value)
-// 	}
-// 	return sum
-// }
-
 func (parser *Paser) expression() *astNode {
 	root := parser.addition()
 	return root
@@ -106,7 +93,7 @@ func (parser *Paser) expression() *astNode {
 
 func (parser *Paser) addition() *astNode {
 	leftNode := parser.mathFunc()
-	for parser.lookahead.IsType(lexer.AddOp, lexer.MinusOp) {
+	for parser.lookahead.IsType(AddOp, MinusOp) {
 		leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.mathFunc()}
 	}
 	return leftNode
@@ -114,17 +101,17 @@ func (parser *Paser) addition() *astNode {
 }
 func (parser *Paser) mathFunc() *astNode {
 	leftNode := parser.multiplication()
-	if parser.lookahead.IsType(lexer.LeftPar) {
+	if parser.lookahead.IsType(LeftPar) {
 		parser.Consume(parser.lookahead.TokenType)
 		arg := parser.expression()
-		parser.Consume(lexer.RightPar)
+		parser.Consume(RightPar)
 		return &astNode{token: leftNode.token, left: arg}
 	}
 	return leftNode
 }
 func (parser *Paser) multiplication() *astNode {
 	leftNode := parser.exponentiation()
-	for parser.lookahead.IsType(lexer.MultOp, lexer.DivOp) {
+	for parser.lookahead.IsType(MultOp, DivOp) {
 		leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.exponentiation()}
 	}
 	return leftNode
@@ -132,51 +119,56 @@ func (parser *Paser) multiplication() *astNode {
 
 func (parser *Paser) exponentiation() *astNode {
 	leftNode := parser.terminals()
-	for parser.lookahead.IsType(lexer.ExpOp) {
+	for parser.lookahead.IsType(ExpOp) {
 		leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.terminals()}
 	}
 	return leftNode
 }
 func (parser *Paser) terminals() *astNode {
-	if parser.lookahead.IsType(lexer.LeftPar) {
-		parser.Consume(lexer.LeftPar)
+	if parser.lookahead.IsType(LeftPar) {
+		parser.Consume(LeftPar)
 		exp := parser.expression()
-		parser.Consume(lexer.RightPar)
+		parser.Consume(RightPar)
 		return exp
 	}
-	if parser.lookahead.IsType(lexer.Number, lexer.NegativeNumber) {
+	if parser.lookahead.IsType(Number, NegativeNumber) {
 		return &astNode{token: parser.Consume(parser.lookahead.TokenType)}
 	}
-	if parser.lookahead.IsType(lexer.MathFunc) {
+	if parser.lookahead.IsType(MathFunc) {
 		return &astNode{token: parser.Consume(parser.lookahead.TokenType)}
 	}
 	panic("Unkown Terminal")
 }
 
-func TreeWalk(root *astNode) float64 {
+func TreeWalk(root *astNode, useDegrees bool) float64 {
 	var result float64
-	if root.token.TokenType == lexer.AddOp {
-		result = result + TreeWalk(root.left) + TreeWalk(root.right)
+	if root.token.TokenType == AddOp {
+		result = result + TreeWalk(root.left, useDegrees) + TreeWalk(root.right, useDegrees)
 		return result
-	} else if root.token.TokenType == lexer.MinusOp {
-		result = result + TreeWalk(root.left) - TreeWalk(root.right)
+	} else if root.token.TokenType == MinusOp {
+		result = result + TreeWalk(root.left, useDegrees) - TreeWalk(root.right, useDegrees)
 		return result
-	} else if root.token.TokenType == lexer.MultOp {
-		result = result + TreeWalk(root.left)*TreeWalk(root.right)
+	} else if root.token.TokenType == MultOp {
+		result = result + TreeWalk(root.left, useDegrees)*TreeWalk(root.right, useDegrees)
 		return result
-	} else if root.token.TokenType == lexer.DivOp {
-		result = result + TreeWalk(root.left)/TreeWalk(root.right)
+	} else if root.token.TokenType == DivOp {
+		result = result + TreeWalk(root.left, useDegrees)/TreeWalk(root.right, useDegrees)
 		return result
-	} else if root.token.TokenType == lexer.ExpOp {
-		result = result + math.Pow(TreeWalk(root.left), TreeWalk(root.right))
+	} else if root.token.TokenType == ExpOp {
+		result = result + math.Pow(TreeWalk(root.left, useDegrees), TreeWalk(root.right, useDegrees))
 		return result
-	} else if root.token.TokenType == lexer.MathFunc {
+	} else if root.token.TokenType == MathFunc {
 		mathFunc, err := mathFuncEval(root.token.Value)
 		if err != nil {
 			panic(err)
 		}
-		return mathFunc(TreeWalk(root.left))
-	} else if root.token.IsType(lexer.Number, lexer.NegativeNumber) {
+		if useDegrees {
+			result = mathFunc(TreeWalk(root.left, useDegrees) * math.Pi / 180)
+		} else {
+			result = mathFunc(TreeWalk(root.left, useDegrees))
+		}
+		return result
+	} else if root.token.IsType(Number, NegativeNumber) {
 		value, _ := strconv.ParseFloat(root.token.Value, 64)
 		return value
 	}
@@ -194,7 +186,7 @@ func mathFuncEval(funcName string) (func(float64) float64, error) {
 	case "atan":
 		return math.Atan, nil
 	case "cos":
-		return math.Atan, nil
+		return math.Cos, nil
 	case "acos":
 		return math.Acos, nil
 	case "sqrt":

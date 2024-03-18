@@ -79,7 +79,7 @@ func (lexer *Lexer) tokenize() {
 				lexer.tokenize()
 				return
 			} else if rule.tokenType == NegativeNumber {
-				// when we have
+				// To handle case of substraction operator accounted as negative number not as an operation
 				if len(lexer.tokens) != 0 {
 					lexer.tokens = append(lexer.tokens, Token{Value: "+", TokenType: AddOp})
 				}

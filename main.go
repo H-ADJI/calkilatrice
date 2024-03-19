@@ -34,7 +34,11 @@ func main() {
 		fmt.Printf("Tokens : %v \n\n", lexer.Tokens())
 	}
 	p := parser.Paser{}
-	ast := p.AST(*mathExpr)
+	ast, err := p.AST(*mathExpr)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	if *showAst {
 		fmt.Println("The Abstract Syntax Tree")
 		fmt.Println(ast)

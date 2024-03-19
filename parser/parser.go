@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -66,14 +67,16 @@ func (parser *Paser) Next() {
 	parser.lookahead = parser.tokens[parser.cursor]
 }
 
-func (parser *Paser) Consume(tokenType int) Token {
+func (parser *Paser) Consume(tokenType int) (Token, error) {
 	if parser.lookahead.TokenType != tokenType {
-		panic("Wrong token type")
+		errMsg := fmt.Sprintf("unable to parse Expression, invalid syntax at position %d ==> %s", parser.cursor-1, string(parser.mathExpression))
+		errCursor := strings.Repeat(" ", len(errMsg)-parser.cursor)
+		return Token{}, fmt.Errorf("%s\n%s^", errMsg, errCursor)
 	}
 	defer parser.Next()
-	return parser.lookahead
+	return parser.lookahead, nil
 }
-func (parser *Paser) AST(mathExpression string) *AST {
+func (parser *Paser) AST(mathExpression string) (*AST, error) {
 	tokenizer := NewLexer(mathExpression)
 	tokens := tokenizer.Tokens()
 	parser.tokens = tokens
@@ -81,63 +84,126 @@ func (parser *Paser) AST(mathExpression string) *AST {
 	if len(tokens) > 0 {
 		parser.lookahead = tokens[0]
 		parser.cursor = 0
-		return &AST{Root: *parser.expression()}
+		root, err := parser.expression()
+		if err != nil {
+			return nil, err
+		}
+		return &AST{Root: *root}, nil
 	}
-	return &AST{}
+	return &AST{}, nil
 }
 
-func (parser *Paser) expression() *astNode {
-	root := parser.addition()
-	return root
+func (parser *Paser) expression() (*astNode, error) {
+	root, err := parser.addition()
+	if err != nil {
+		return nil, err
+	}
+	return root, nil
 }
 
-func (parser *Paser) addition() *astNode {
-	leftNode := parser.mathFunc()
+func (parser *Paser) addition() (*astNode, error) {
+	leftNode, err := parser.mathFunc()
+	if err != nil {
+		return nil, err
+	}
 	for parser.lookahead.IsType(AddOp, MinusOp) {
-		leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.mathFunc()}
+		right, err := parser.mathFunc()
+		if err != nil {
+			return nil, err
+		}
+		token, err := parser.Consume(parser.lookahead.TokenType)
+		if err != nil {
+			return nil, err
+		}
+		leftNode = &astNode{token: token, left: leftNode, right: right}
 	}
-	return leftNode
+	return leftNode, nil
 
 }
-func (parser *Paser) mathFunc() *astNode {
-	leftNode := parser.multiplication()
+func (parser *Paser) mathFunc() (*astNode, error) {
+	leftNode, err := parser.multiplication()
+	if err != nil {
+		return nil, err
+	}
 	if parser.lookahead.IsType(LeftPar) {
-		parser.Consume(parser.lookahead.TokenType)
-		arg := parser.expression()
-		parser.Consume(RightPar)
-		return &astNode{token: leftNode.token, left: arg}
+		_, err := parser.Consume(parser.lookahead.TokenType)
+		if err != nil {
+			return nil, err
+		}
+		arg, err := parser.expression()
+		if err != nil {
+			return nil, err
+		}
+		_, err = parser.Consume(RightPar)
+		if err != nil {
+			return nil, err
+		}
+		return &astNode{token: leftNode.token, left: arg}, nil
 	}
-	return leftNode
+	return leftNode, nil
 }
-func (parser *Paser) multiplication() *astNode {
-	leftNode := parser.exponentiation()
-	for parser.lookahead.IsType(MultOp, DivOp) {
-		leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.exponentiation()}
+func (parser *Paser) multiplication() (*astNode, error) {
+	leftNode, err := parser.exponentiation()
+	if err != nil {
+		return nil, err
 	}
-	return leftNode
+	for parser.lookahead.IsType(MultOp, DivOp) {
+		right, err := parser.exponentiation()
+		if err != nil {
+			return nil, err
+		}
+		token, err := parser.Consume(parser.lookahead.TokenType)
+		if err != nil {
+			return nil, err
+		}
+		leftNode = &astNode{token: token, left: leftNode, right: right}
+	}
+	return leftNode, nil
 }
 
-func (parser *Paser) exponentiation() *astNode {
-	leftNode := parser.terminals()
-	for parser.lookahead.IsType(ExpOp) {
-		leftNode = &astNode{token: parser.Consume(parser.lookahead.TokenType), left: leftNode, right: parser.terminals()}
+func (parser *Paser) exponentiation() (*astNode, error) {
+	leftNode, err := parser.terminals()
+	if err != nil {
+		return nil, err
 	}
-	return leftNode
+	for parser.lookahead.IsType(ExpOp) {
+		right, err := parser.terminals()
+		if err != nil {
+			return nil, err
+		}
+		token, err := parser.Consume(parser.lookahead.TokenType)
+		if err != nil {
+			return nil, err
+		}
+		leftNode = &astNode{token: token, left: leftNode, right: right}
+	}
+	return leftNode, nil
 }
-func (parser *Paser) terminals() *astNode {
+func (parser *Paser) terminals() (*astNode, error) {
 	if parser.lookahead.IsType(LeftPar) {
 		parser.Consume(LeftPar)
-		exp := parser.expression()
+		exp, err := parser.expression()
+		if err != nil {
+			return nil, err
+		}
 		parser.Consume(RightPar)
-		return exp
+		return exp, nil
 	}
 	if parser.lookahead.IsType(Number, NegativeNumber) {
-		return &astNode{token: parser.Consume(parser.lookahead.TokenType)}
+		token, err := parser.Consume(parser.lookahead.TokenType)
+		if err != nil {
+			return nil, err
+		}
+		return &astNode{token: token}, nil
 	}
 	if parser.lookahead.IsType(MathFunc) {
-		return &astNode{token: parser.Consume(parser.lookahead.TokenType)}
+		token, err := parser.Consume(parser.lookahead.TokenType)
+		if err != nil {
+			return nil, err
+		}
+		return &astNode{token: token}, nil
 	}
-	panic("Unkown Terminal")
+	return nil, errors.New("Invalid Syntax while parsing token : " + parser.lookahead.Value)
 }
 
 func TreeWalk(root *astNode, useDegrees bool) float64 {

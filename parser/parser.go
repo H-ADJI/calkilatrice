@@ -66,11 +66,20 @@ func (parser *Paser) Next() {
 	}
 	parser.lookahead = parser.tokens[parser.cursor]
 }
-
+func debugHelper(tokens []Token, until int) int {
+	length := 0
+	for i, t := range tokens {
+		if until == i {
+			break
+		}
+		length += len(t.Value)
+	}
+	return length
+}
 func (parser *Paser) Consume(tokenType int) (Token, error) {
 	if parser.lookahead.TokenType != tokenType {
 		errMsg := fmt.Sprintf("unable to parse Expression, invalid syntax at position %d ==> %s", parser.cursor-1, string(parser.mathExpression))
-		errCursor := strings.Repeat(" ", len(errMsg)-parser.cursor)
+		errCursor := strings.Repeat(" ", len(errMsg)-len(parser.mathExpression)+debugHelper(parser.tokens, parser.cursor)+1)
 		return Token{}, fmt.Errorf("%s\n%s^", errMsg, errCursor)
 	}
 	defer parser.Next()
@@ -87,6 +96,9 @@ func (parser *Paser) AST(mathExpression string) (*AST, error) {
 		root, err := parser.expression()
 		if err != nil {
 			return nil, err
+		}
+		if len(tokens) > parser.cursor {
+			return nil, errors.New("could not parse the expression, Invalid syntax")
 		}
 		return &AST{Root: *root}, nil
 	}
@@ -107,11 +119,11 @@ func (parser *Paser) addition() (*astNode, error) {
 		return nil, err
 	}
 	for parser.lookahead.IsType(AddOp, MinusOp) {
-		right, err := parser.mathFunc()
+		token, err := parser.Consume(parser.lookahead.TokenType)
 		if err != nil {
 			return nil, err
 		}
-		token, err := parser.Consume(parser.lookahead.TokenType)
+		right, err := parser.mathFunc()
 		if err != nil {
 			return nil, err
 		}
@@ -138,7 +150,11 @@ func (parser *Paser) mathFunc() (*astNode, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &astNode{token: leftNode.token, left: arg}, nil
+		if leftNode.token.TokenType == MathFunc {
+			return &astNode{token: leftNode.token, left: arg}, nil
+		}
+		leftNode.right.left = arg
+		return leftNode, nil
 	}
 	return leftNode, nil
 }
@@ -148,11 +164,11 @@ func (parser *Paser) multiplication() (*astNode, error) {
 		return nil, err
 	}
 	for parser.lookahead.IsType(MultOp, DivOp) {
-		right, err := parser.exponentiation()
+		token, err := parser.Consume(parser.lookahead.TokenType)
 		if err != nil {
 			return nil, err
 		}
-		token, err := parser.Consume(parser.lookahead.TokenType)
+		right, err := parser.exponentiation()
 		if err != nil {
 			return nil, err
 		}
@@ -167,11 +183,11 @@ func (parser *Paser) exponentiation() (*astNode, error) {
 		return nil, err
 	}
 	for parser.lookahead.IsType(ExpOp) {
-		right, err := parser.terminals()
+		token, err := parser.Consume(parser.lookahead.TokenType)
 		if err != nil {
 			return nil, err
 		}
-		token, err := parser.Consume(parser.lookahead.TokenType)
+		right, err := parser.terminals()
 		if err != nil {
 			return nil, err
 		}

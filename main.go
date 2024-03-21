@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	mathExpr := flag.String("expr", "", "Mathematical expression to evaluate. Example : 1/2 - (4 - cos(10^2))")
+	mathExpr := flag.String("expr", "2*sin(30)", "Mathematical expression to evaluate. Example : 1/2 - (4 - cos(10^2))")
 	supportedFunctions := flag.Bool("S", false, "Shows the list of mathematical operations supported by this calculator")
 	showTokens := flag.Bool("include-tokens", false, "Add looging the parsed tokens to the output")
 	showAst := flag.Bool("include-ast", false, "Add looging the evaluated ast to the output")

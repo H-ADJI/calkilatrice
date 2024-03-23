@@ -81,7 +81,7 @@ The last step in the interpretation pipeline is to evaluate the resulting AST, t
 
 ### Handling invalid input
 The interpreter reports invalid input when we feed it with some unsupported expressions or tokens either during the lexing phase (tokens that are not included in the grammar), or during the parsing phase for expression with invalid syntax.
-
+The golang implementation of the math function will return a NaN of inf output if called outside of their definition interval. Example tan(PI/2)  
 ### Error reporting
 
 While not very accurate the interpreter try to give directions about the token / the character position causing the invalid expression / error.

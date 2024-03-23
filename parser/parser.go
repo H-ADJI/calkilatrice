@@ -250,7 +250,12 @@ func TreeWalk(root *astNode, useDegrees bool) float64 {
 			panic(err)
 		}
 		if useDegrees {
-			result = mathFunc(TreeWalk(root.left, useDegrees) * math.Pi / 180)
+			if root.token.Value == "cos" || root.token.Value == "tan" || root.token.Value == "sin" {
+				result = mathFunc(TreeWalk(root.left, useDegrees) * math.Pi / 180)
+			} else {
+				result = mathFunc(TreeWalk(root.left, useDegrees))
+
+			}
 		} else {
 			result = mathFunc(TreeWalk(root.left, useDegrees))
 		}

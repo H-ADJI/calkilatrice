@@ -98,7 +98,9 @@ func (parser *Paser) AST(mathExpression string) (*AST, error) {
 			return nil, err
 		}
 		if len(tokens) > parser.cursor {
-			return nil, errors.New("could not parse the expression, Invalid syntax")
+			errMsg := fmt.Sprintf("unable to parse Expression, invalid syntax at position %d ==> %s", parser.cursor-1, string(parser.mathExpression))
+			errCursor := strings.Repeat(" ", len(errMsg)-len(parser.mathExpression)+debugHelper(parser.tokens, parser.cursor)+1)
+			return nil, errors.New(errMsg + "\n" + errCursor)
 		}
 		return &AST{Root: *root}, nil
 	}
@@ -219,7 +221,10 @@ func (parser *Paser) terminals() (*astNode, error) {
 		}
 		return &astNode{token: token}, nil
 	}
-	return nil, errors.New("Invalid Syntax while parsing token : " + parser.lookahead.Value)
+	errMsg := fmt.Sprintf("unable to parse Expression, invalid syntax at position %d ==> %s", parser.cursor-1, string(parser.mathExpression))
+	errCursor := strings.Repeat(" ", len(errMsg)-len(parser.mathExpression)+debugHelper(parser.tokens, parser.cursor))
+	return nil, errors.New(errMsg + "\n" + errCursor + "^")
+	// return nil, errors.New("Invalid Syntax while parsing token : " + parser.lookahead.Value)
 }
 
 func TreeWalk(root *astNode, useDegrees bool) float64 {

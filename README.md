@@ -47,11 +47,11 @@ EXPRESSION
     ;
 
 ADDITION
-    : ADDITION ('+' | '-') CALL
-    | CALL
+    : ADDITION ('+' | '-') funcCALL
+    | funcCALL
     ;
 
-CALL
+funcCALL
     : MULTIPLICATION
     | mathFunc'(' EXPRESSION ')'
     ;
@@ -62,8 +62,8 @@ MULTIPLICATION
     ;
 
 EXPONENTIATION
-    : EXPONENTIATION '^' BASIC
-    | BASIC
+    : EXPONENTIATION '^' TERMINALS
+    | TERMINALS
     ;
 
 TERMINALS
@@ -78,3 +78,6 @@ The result of the parsing process is a tree structure called AST. When evaluatio
 ### Step 3 : Evaluation
 The last step in the interpretation pipeline is to evaluate the resulting AST, this is done using a post order traversal of the tree nodes since the operation with most precedence are in the leafs of the tree.
 <p align="center"><img src="/assets/traversal.png" /></p>
+
+### Handling invalid input
+TODO

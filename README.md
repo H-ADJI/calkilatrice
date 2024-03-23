@@ -21,6 +21,19 @@ The project is written in Go, the compiler version used is `1.21.5` on a debian 
   - Example : `go run main.go --expr "1 + 2*sin(3.14/2) - tan(3.14/4)"`, this should output 2 as a result.
 - There are other options that can be activated like using Degree instead of the default Radians for trigonometric operations, logging out the AST or the Tokens. You can find how to use them using the --help option.
 
+```bash
+Usage of ./mathEval:
+  -S	Shows the list of mathematical operations supported by this calculator
+  -expr string
+    	Mathematical expression to evaluate. Example : 1/2 - (4 - cos(10^2)) (default "2*sin(30)")
+  -include-ast
+    	Add looging the evaluated ast to the output
+  -include-tokens
+    	Add looging the parsed tokens to the output
+  -use-degrees
+    	Enable Trigonometric functions evaluation using Degrees as a unit instead of Radians
+```
+
 ## Implementation details
 
 ### Pipeline
@@ -80,8 +93,12 @@ The last step in the interpretation pipeline is to evaluate the resulting AST, t
 <p align="center"><img src="/assets/traversal.png" /></p>
 
 ### Handling invalid input
+
 The interpreter reports invalid input when we feed it with some unsupported expressions or tokens either during the lexing phase (tokens that are not included in the grammar), or during the parsing phase for expression with invalid syntax.
-The golang implementation of the math function will return a NaN of inf output if called outside of their definition interval. Example tan(PI/2)  
+The golang implementation of the math function will return a NaN of inf output if called outside of their definition interval. Example asin(5)  will output NaN since it's defined on the [-1,1] interval
+
 ### Error reporting
 
 While not very accurate the interpreter try to give directions about the token / the character position causing the invalid expression / error.
+
+Number precision and possible overflow issues where not accounted for in this toy project :(.

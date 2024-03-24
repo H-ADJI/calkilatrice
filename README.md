@@ -1,7 +1,8 @@
 # Math Expression Evaluator
 
 Small CLI to parse and evaluate basic mathematical expression using a tree-walk strategy.
-This interpreter support binary operations on 64 bits floating points numbers and some basic mathfunctions :
+This interpreter support binary operations on 64 bits floating point numbers and some basic math functions :
+
 - Trigonometric functions : cos(θ) - acos(b) - sin(θ) - asin(b) - tan(θ) - atan(b)
 - square root function : sqrt(a)
 - binary operations :
@@ -11,14 +12,19 @@ This interpreter support binary operations on 64 bits floating points numbers an
   - multiplication : a * b
   - division : a / b
 
-## Dependencies 
+## Dependencies
+
 The project is written in Go, the compiler version used is `1.21.5` on a debian machine
+
+### Why Go ?
+
+Started learning it a month ago and took this project as an exercise to get more familiar with the language syntax and concepts.
 
 ## Running the program
 
 - if you have go installed, cd to to the project directory and run : `go run main.go --help` to list all possible options for this CLI
-- or you can download the binary on the releas section of this repo.
-- evaluation an expression : `go run main.go --expr "<your very complicated math expression>`
+- or you can download the binary on the release section of this repo.
+- evaluation an expression : `go run main.go --expr "<your very complicated math expression>"`
   - Example : `go run main.go --expr "1 + 2*sin(3.14/2) - tan(3.14/4)"`, this should output 2 as a result.
 - There are other options that can be activated like using Degree instead of the default Radians for trigonometric operations, logging out the AST or the Tokens. You can find how to use them using the --help option.
 

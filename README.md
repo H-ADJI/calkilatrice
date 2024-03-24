@@ -112,6 +112,6 @@ The golang implementation of the math function will return a NaN of inf output i
 
 ### Error reporting
 
-While it's not complete / very accurate feature, the interpreter try to give directions about the token / the character position causing the invalid expression / error.
+While it's not a complete / accurate feature, the interpreter try to give directions about the token / the character position causing the invalid expression / error.
 
 Number precision and possible overflow issues where not accounted for in this toy project :(.
